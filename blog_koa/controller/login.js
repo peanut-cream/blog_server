@@ -73,3 +73,49 @@ exports.getuserList = async (ctx) => {
         data:body
     }
 }
+exports.getLogin = async (ctx) => { 
+    console.log(ctx.session,"nihao");
+    if (!ctx.session.openId) {
+        // openid不存在
+        ctx.session.openId = false;
+        let data = { ...ctx.request.body };
+        if ((!data.name || !data.password)) { 
+            ctx.body = {
+                code: 400,
+                msg:"用户名、密码不能为空"
+            }
+            return
+        }
+        let body = await userModel.find({ name: data.name });
+        console.log(body);
+        if (body.length > 0) {
+            if (body[0].password == md5(data.password)) {
+                ctx.session.openId = new Date().getTime();
+                ctx.session.userState = true;
+                ctx.body = {
+                    code: 200,
+                    msg: "登录成功！11"
+                }
+                console.log(ctx.session);
+            } else { 
+                ctx.body = {
+                    data: body[0],
+                    code: 400,
+                    msg: "用户密码错误"
+                }
+            }
+            
+        } else { 
+            ctx.body = {
+                code: 400,
+                msg:"用户名不存在"
+            }
+        }
+
+    } else { 
+        ctx.body = {
+            code: 200,
+            msg: "已登录"
+        }
+    }
+}
