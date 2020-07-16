@@ -33,7 +33,6 @@ const LoginPage = () => {
                         />     
                         <br/><br/>
                         <Button type="primary" size="large" block onClick={checkLogin} > Login in </Button>
-                        <span onClick={abc}>wangji</span>
                     </Card>
                 </Spin>
             </div>
@@ -68,13 +67,6 @@ const LoginPage = () => {
         //     setisLoading(false);
         //     console.log(res);
         // }).catch(() => { setisLoading(false);})
-    }
-    function abc() { 
-        axios({
-            method: "GET",
-            url:"/",
-            // withCredentials: true
-        }).then(res => {  })
     }
 }
 export default LoginPage;
