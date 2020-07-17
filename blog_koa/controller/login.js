@@ -50,7 +50,6 @@ exports.register=async (ctx) => {
             };
             throw new Error("密码不能小于4位");
         }
-        console.log(await findOneAndUpdate("id"))
         let body = await new userModel({
             ...data, password: md5(data.password), id: (await findOneAndUpdate("id")).autoadd
         }).save();
@@ -74,10 +73,7 @@ exports.getuserList = async (ctx) => {
     }
 }
 exports.getLogin = async (ctx) => { 
-    console.log(ctx.session,"nihao");
-    if (!ctx.session.openId) {
-        // openid不存在
-        ctx.session.openId = false;
+    
         let data = { ...ctx.request.body };
         if ((!data.name || !data.password)) { 
             ctx.body = {
@@ -87,17 +83,16 @@ exports.getLogin = async (ctx) => {
             return
         }
         let body = await userModel.find({ name: data.name });
-        console.log(body);
         if (body.length > 0) {
             if (body[0].password == md5(data.password)) {
                 ctx.session.openId = new Date().getTime();
-                ctx.session.userState = true;
                 ctx.body = {
                     code: 200,
-                    msg: "登录成功！11"
+                    msg: "登录成功",
+                    openId:ctx.session.openId,
                 }
-                console.log(ctx.session);
             } else { 
+                ctx.session.openId = null;
                 ctx.body = {
                     data: body[0],
                     code: 400,
@@ -106,16 +101,28 @@ exports.getLogin = async (ctx) => {
             }
             
         } else { 
+            ctx.session.openId = null;
             ctx.body = {
                 code: 400,
                 msg:"用户名不存在"
             }
         }
 
-    } else { 
+    
+}
+exports.checkOpenID = async (ctx) => { 
+    let ClientOpenID = ctx.request.body.openId;
+    let ServeOpenId = ctx.session.openId;
+    console.log(ClientOpenID, ServeOpenId);
+    if (ServeOpenId && ClientOpenID == ServeOpenId) {
         ctx.body = {
             code: 200,
             msg: "已登录"
+        }
+    } else { 
+        ctx.body = {
+            code: 400,
+            msg:"未登录"
         }
     }
 }

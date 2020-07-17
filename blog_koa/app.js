@@ -5,6 +5,8 @@ let cors = require('koa2-cors');
 let adminRouter = require("./router/adminRouter");
 let bodyParser = require('koa-bodyparser');
 const Koa_Session = require('koa-session');   // 导入koa-session 
+// 检测是否登录
+let checkOpenId = require("./middleware/checksession")
 const app = new Koa();
 const session_config = {
     key: 'koa:sess', /**  cookie的key。 (默认是 koa:sess) */
@@ -19,18 +21,20 @@ const session_config = {
 // 加载路由
 app.keys=["some secret hurr"];
 app.use(Koa_Session(session_config, app))
-    .use(cors())
-    .use(async (ctx, next)=> {
-        // ctx.set('Access-Control-Allow-Origin', ctx.headers.origin);
-        // ctx.set('Access-Control-Allow-Headers', 'Content-Type, Content-Length, Authorization, Accept, X-Requested-With , yourHeaderFeild');
-        // ctx.set('Access-Control-Allow-Methods', 'PUT, POST, GET, DELETE, OPTIONS');
-        ctx.set('Access-Control-Allow-Credentials', true);
-        if (ctx.method == 'OPTIONS') {
-            ctx.body = 200; 
-        } else {
-            await next();
-        }
-    })
+    .use(cors({
+        credentials: true,
+    })).use(checkOpenId())
+    // .use(async (ctx, next)=> {
+    //     // ctx.set('Access-Control-Allow-Origin', ctx.headers.origin);
+    //     // ctx.set('Access-Control-Allow-Headers', 'Content-Type, Content-Length, Authorization, Accept, X-Requested-With , yourHeaderFeild');
+    //     // ctx.set('Access-Control-Allow-Methods', 'PUT, POST, GET, DELETE, OPTIONS');
+    //     ctx.set('Access-Control-Allow-Credentials', true);
+    //     if (ctx.method == 'OPTIONS') {
+    //         ctx.body = 200; 
+    //     } else {
+    //         await next();
+    //     }
+    // })
     .use(bodyParser())
     .use(router.routes()).use(router.allowedMethods())
     .use(adminRouter.routes()).use(adminRouter.allowedMethods());
