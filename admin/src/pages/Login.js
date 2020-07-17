@@ -3,11 +3,26 @@ import { Button, Spin, Input, Card,message } from "antd";
 import { UserOutlined, EyeTwoTone, EyeInvisibleOutlined, LockOutlined } from '@ant-design/icons';
 import axios from "../utils/axios"
 import "../less/login.less"
-const LoginPage = () => { 
+const LoginPage = (props) => { 
     const [isLoading, setisLoading] = useState(false);
     const [UserName, setUserName] = useState("");
     const [Password, setPassword] = useState("");
     useEffect(() => { 
+        console.log(localStorage.getItem("openId"));
+        if (localStorage.getItem("openId")) { 
+            axios({
+                method: "POST",
+                url:"/checkOpenID",
+                data: {
+                    openId:localStorage.getItem("openId"),
+                }
+            }).then(res => { 
+                if (res.data.code === 200) { 
+                    props.history.push('/index');
+                    message.success(res.data.msg);
+                }
+            })
+        }
     },[])
     return (
         <>
@@ -50,7 +65,6 @@ const LoginPage = () => {
             setTimeout(() => { setisLoading(false) }, 1000);
             return
         }
-        console.log("点击");
         axios({
             method: "POST",
             url:"/login",
@@ -58,15 +72,21 @@ const LoginPage = () => {
                 name: UserName,
                 password: Password 
             },
-            // withCredentials: true
-        }).then(res => { setisLoading(false); }).catch((err) => { 
+        }).then(res => {
+            setisLoading(false);
+            if (res.data.code === 200) {
+                if (res.data.msg === "登录成功"&&res.data.openId) { 
+                    localStorage.setItem("openId", res.data.openId);
+                }
+                message.success(res.data.msg);
+                props.history.push('/index')
+            } else { 
+                message.error(res.data.msg);
+            }
+        }).catch((err) => { 
             console.log(err)
             setisLoading(false);
         })
-        // axios.post("/login", { data: { name: UserName, password: Password } }, {withCredentials: true}).then(res => { 
-        //     setisLoading(false);
-        //     console.log(res);
-        // }).catch(() => { setisLoading(false);})
     }
 }
 export default LoginPage;
