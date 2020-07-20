@@ -37,7 +37,7 @@ async function queryList(ctx,api) {
     }
 }
 exports.getList = async (ctx) => { 
-    queryList(ctx, true);
+    await queryList(ctx, true);
 }
 exports.Addarticle = async (ctx) => { 
     let parms = { ...ctx.request.body };
@@ -45,6 +45,7 @@ exports.Addarticle = async (ctx) => {
     if (!parms.desc) return ctx.body = { code: 401, msg: "介绍不能为空" };
     if (!parms.context) return ctx.body = { code: 401, msg: "文章不能为空" };
     if (!parms.status) parms.status = 1;//如果没有状态默认给个状态 1，草稿
+    if (!parms.publicTime) parms.publicTime = new Date();
     let data = await new blogSchema({ ...parms, id: (await findOneAndUpdate("blog_id")).autoadd }).save();
     ctx.body = {
         code: 200,

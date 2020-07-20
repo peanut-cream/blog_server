@@ -9,7 +9,7 @@ import javascript from 'highlight.js/lib/languages/javascript';
 import 'highlight.js/styles/monokai-sublime.css';
 // import MarkNav from 'markdown-navbar';
 // import 'markdown-navbar/dist/navbar.css';
-import axios from "axios"
+import axios from "../utils/axios"
 import "../less/Addarcle.less"
 const { TextArea } = Input;
 const { Option } = Select ;
@@ -31,15 +31,16 @@ let Addarcle = (list) => {
         smartypants: false,
         xhtml: false
     });
-    const [articleContent,setArticleContent] = useState("");
+    const [context,setcontext] = useState("");
     const [height,setheight] = useState(getHeight());
-    const [des,setdes] = useState("");
+    const [desc,setdesc] = useState("");
     const [time,setTime] = useState("");
-    let markdownContent = marked(articleContent)
-    let DesContent = marked(des)
+    const [title,settitle] = useState("");
+    let markdownContent = marked(context)
+    let DesContent = marked(desc)
     let changeContent = (e) => { 
         console.log(JSON.stringify(e.target.value))
-        setArticleContent(e.target.value);
+        setcontext(e.target.value);
     }
     let handleChange = (value) => { 
         console.log(`selected ${value}`);
@@ -48,7 +49,31 @@ let Addarcle = (list) => {
         return document.documentElement.offsetHeight-94-32-30-40
     }
     function changeDesContent(e) { 
-        setdes(e.target.value)
+        setdesc(e.target.value)
+    }
+    function save(name) { 
+        let data= {
+            title,
+            context: context,
+            desc,
+            status: 1,
+            publicTime:time,
+        }
+        // 暂存
+        if (name == 'template') { 
+            data.status = 1;
+        }
+        // 发布
+        if (name == 'public') { 
+            data.status = 2;
+        }
+        axios({
+            method: "POST",
+            url: "/Addarticle",
+            data,
+        }).then(res => { 
+            console.log(res);
+        })
     }
     useEffect(() => { 
         window.onresize = () => { 
@@ -60,7 +85,7 @@ let Addarcle = (list) => {
             <Row className="comm-main" type="flex" justify="space-around" gutter={5}>
                 <Col className="comm-left" span={ 18 } >
                     <div className="title_line">
-                        <Input placeholder="请输入标题" />
+                        <Input placeholder="请输入标题" value={title} onChange={e => { settitle(e.target.value) }}/>
                         <Select defaultValue="1" style={{ width: 120 }} onChange={handleChange}>
                             <Option value="1">前端随笔</Option>
                             <Option value="2">日常生活</Option>
@@ -68,7 +93,7 @@ let Addarcle = (list) => {
                     </div>
                     <Row gutter={5}>
                         <Col span={12}>
-                            <TextArea value={articleContent} 
+                            <TextArea value={context} 
                                 className="markdown-content" 
                                 autoSize={false}
                                 style={{height:height,resize:"none"}}
@@ -92,13 +117,15 @@ let Addarcle = (list) => {
 
                 <Col className="comm-right" span={ 6 }>
                     <div className="btn_line">
-                        <Button  size="middle">暂存文章</Button>
-                        <Button type="primary" >发布文章</Button>
+                        <Button size="middle" onClick={() => { save("template")}}>暂存文章</Button>
+                        <Button type="primary" onClick={()=>{save("public")}}>发布文章</Button>
                     </div>
                     <TextArea
-                        value={des}
+                        style={{
+                            height: 200,
+                            resize:"none"}}
+                        value={desc}
                         placeholder="文章介绍"
-                        autoSize={{ minRows: 4 }}
                         onChange={changeDesContent} 
                         onPressEnter={changeDesContent}
                         >
@@ -106,12 +133,12 @@ let Addarcle = (list) => {
                     <div>
                         <div 
                             className="show-html"
-                            style={{height:100}}
+                            style={{height:200}}
                             dangerouslySetInnerHTML = {{__html:DesContent}} >
                         </div>
                     </div>
                     <div className="timepick">
-                        <DatePicker showTime defaultValue={time} placeholder="选择发布日期"></DatePicker>
+                        <DatePicker showTime defaultValue={time} placeholder="选择发布日期" onChange={(value) => { setTime(value)}}></DatePicker>
                     </div>
                 </Col>
             </Row>
